@@ -1,0 +1,8 @@
+/__pycache__
+/test.py
+/test
+.env
+/playlist.json
+/music/*
+/downloads/*
+/noteblock.txt
