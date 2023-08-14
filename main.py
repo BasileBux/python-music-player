@@ -76,9 +76,10 @@ def changeIndex(playlistIndex, back):
     
 def checkNextSong():
     for i in range(5):
-        path = f"music/{getTitle(playlistIndex + i)}.mp3"
-        if not exists(path):
-            convertFile(downloadAudio(playlistIndex + i))
+        if playlistIndex + 4 <= playlistLength: 
+            path = f"music/{getTitle(playlistIndex + i)}.mp3"
+            if not exists(path):
+                convertFile(downloadAudio(playlistIndex + i))
         
 def manageFiles(removeIndex, downloadIndex, back):
     path = f"music/{getTitle(removeIndex)}.mp3"
@@ -159,13 +160,27 @@ def removeFolderContent(path):
     for f in filelist:
         os.remove(f)
 
+def generateTracklist():
+    f = open('tracklist.txt', 'w')
+    for i in range(playlistLength + 1):
+        f.write(f"{getTitle(i)}\n")
+    f.close()
+
 if __name__ == '__main__':
     removeFolderContent('music/')
     removeFolderContent('downloads/')
+    os.remove('tracklist.txt')
 
     playlistId = input("\nEnter the id of the playlist you want to listen to: \n> ")
     playlist = getPlaylistInfos(playlistId)
-    playlistLength = (playlist['pageInfo']['totalResults']) - 1
+
+    if playlist['pageInfo']['totalResults'] <= playlist['pageInfo']['resultsPerPage']:
+        playlistLength = (playlist['pageInfo']['totalResults']) - 1
+    else:
+        playlistLength = (playlist['pageInfo']['resultsPerPage']) - 1
+    
+    generateTracklist()
+        
     print("Downloading...")
 
     for i in range(5):
