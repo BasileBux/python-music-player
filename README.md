@@ -7,18 +7,38 @@ With the [YouTube API](https://developers.google.com/youtube/v3/), it fetches th
 ### Interface
 ```bash
 Now playing: 
-Kenya Grace - Meteor
+Kenya Grace - Meteor [4/50|2:21]
+
 [P]lay/Pause | [B]ack | [N]ext | [S]top
 > 
 ```
+<details>
+<summary>Interface explanation</summary>
+    <code>
+    If your playlist is an album it will display the album name, artist, date under the video title. 
+
+    Now playing:
+    YouTube video title [number in list/number of songs|song duration]
+
+    press "p" to play/pause | press "b" to go to previous song | press "n" to go to next song | press "s" to stop program
+    >
+</details>
+<br>
 
 ![python-function-general](assets/python-youtube-player-general.png)
 
-When you run the program, it will ask you to enter a valid YouTube playlist ID. To find it, go to the playlist you want to download and find the link. It should look something like this: `https://www.youtube.com/playlist?list=PL9JM2aC37BG03vlqyhiYX54NG_thqqvbg`. The character string after `list=` is the playlist's id, so in this case, `PL9JM2aC37BG03vlqyhiYX54NG_thqqvbg`. 
+When you run the program, it will ask you to enter a valid YouTube playlist link. You can also enter a playlist Id. Note that albums count as playlists so you can read them too.
 
-Then, it will download some songs (it may take a bit of time ~20s) and there you go!
+Then, it will download some songs (it may take a bit of time ~30s) and there you go!
 
 Now, navigate with the controls (characters inside the square brackets).
+
+You can also access the tracklist in the tracklist.txt file. 
+
+### Limitations
+Due to the youtube API's limitations, the maximum length of the playlist is 50 songs. Your playlist can be longer but just keep in mind that only the first 50 songs will be played. 
+
+When a new song strats, the media controls print instanly but the actions are delayed by the background process of managing the song list (delete / download). 
 
 ### Specific
 The mp3 files that are downloaded by PyTube aren't readable by PyGame's mixer. I tried the VLC Python module, which can read these files, but the module is pretty bad overall. The solution I went with was to convert the file with Pydub. Which creates a file that Pygame's mixer can read.
@@ -26,8 +46,10 @@ The mp3 files that are downloaded by PyTube aren't readable by PyGame's mixer. I
 <img src="assets/python-youtube-player-download.png" alt="python-function-download" width="660" />
 <!-- </p> -->
 
-### :warning: Possible Issue
+### :warning: Possible Issues
 A big restriction of this program is that, for various reasons, YouTube videos cannot be downloaded. This is annoying because it means that some songs from your playlist won't be played. I use the PyTube exceptions to skip downloading these songs and stop the program from crashing. But with the way that file management is done, this issue could make the playlist unreadable.
+
+? Struggling with kpop playlists ??? (maybe non-ascii chars ?)
 
 ## How to use
 1. Install Python 3.8 or higher if not already installed.
@@ -55,15 +77,17 @@ Guide from: <a href="https://blog.hubspot.com/website/how-to-get-youtube-api-key
 </details>
 <br>
 
-4. Run the main script:
+1. Run the main script:
 ```bash
 python main.py
 ```
-5. Enter the YouTube playlist ID as prompted.
-6. Enjoy the music! Use the provided controls to navigate through the playlist.
+1. Enter the YouTube playlist ID as prompted.
+2. Enjoy the music! Use the provided controls to navigate through the playlist.
 
 ## Next features
-- [ ] Add possibility to give a youtube playlist link
+- [x] Add possibility to give a youtube playlist link
+- [x] Add song duration
+- [x] Add index in playlist (7/23)
+- [x] Add paused status when paused in print
+- [x] If playlist is an album, print artist name, album name, album date (still a bit weird things)
 - [ ] Add loop once and loop infinitely controls
-- [ ] Add song duration
-- [ ] Add index in playlist (7/23)

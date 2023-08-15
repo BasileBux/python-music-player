@@ -12,12 +12,14 @@ playlistIndex = 0
 playlistLength = 0
 back = True
 playlist = ""
+playlistId = "Error"
+dirName = os.path.dirname(__file__)
 
 def getPlaylistInfos(playlistId):
-    apiUrl = "https://youtube.googleapis.com/youtube/v3/playlistItems?part=snippet%2CcontentDetails&maxResults=30&playlistId={}&key={}".format(playlistId, youtubeApiKey)
+    apiUrl = "https://youtube.googleapis.com/youtube/v3/playlistItems?part=snippet%2CcontentDetails&maxResults=50&playlistId={}&key={}".format(playlistId, youtubeApiKey)
     response = requests.get(apiUrl)
     jsonResponse = response.json()
-    f = open("playlist.json", "w")
+    f = open(f"{dirName}/playlist.json", "w")
     f.write(json.dumps(jsonResponse))
     f.close()
     return jsonResponse
@@ -30,11 +32,10 @@ def getUrl(videoIndex):
 def getTitle(videoIndex):
     return playlist['items'][videoIndex]['snippet']['title']
 
-# convert file
 def convertFile(mediaName):
-    if mediaName != "Error":
-        inputPath = f"downloads/{mediaName}.mp3"
-        outputPath = f"music/{mediaName}.mp3"
+    inputPath = f"{dirName}/downloads/{mediaName}.mp3"
+    outputPath = f"{dirName}/music/{mediaName}.mp3"
+    if exists(inputPath):
         sound = AudioSegment.from_file(inputPath)
         sound.export(outputPath, format="mp3", bitrate="128k")
         os.remove(inputPath)
@@ -42,19 +43,17 @@ def convertFile(mediaName):
 def downloadAudio(videoIndex):
     url = getUrl(videoIndex)
     mediaName = getTitle(videoIndex)
-    output_path = "downloads"
+    output_path = f"{dirName}/downloads"
 
-    if not exists(f"music/{mediaName}.mp3"):
+    if not exists(f"{dirName}/music/{mediaName}.mp3"):
         try:
             yt = YouTube(url)
         except PytubeError as e:
-            # print(f"Error: {mediaName} could not be downloaded", e)
             return "Error"
         else:
             try:
                 audio_stream = yt.streams.filter(only_audio=True).first()
             except PytubeError as e:
-                # print(f"Error: {mediaName} could not be downloaded", e)
                 return "Error"
             else:
                 filename = f"{mediaName}.mp3"
@@ -63,6 +62,7 @@ def downloadAudio(videoIndex):
     else:
         return "Error"
 
+# loop playlistIndex inside the range defined by playlistLength
 def changeIndex(playlistIndex, back):
     if not back:
         if playlistIndex == playlistLength:
@@ -73,47 +73,83 @@ def changeIndex(playlistIndex, back):
         return playlistIndex -1
     else: 
         return 0
-    
+
+# checks if all the next songs are downloaded and if not, downloads them
 def checkNextSong():
     for i in range(5):
         if playlistIndex + 4 <= playlistLength: 
-            path = f"music/{getTitle(playlistIndex + i)}.mp3"
+            path = f"{dirName}/music/{getTitle(playlistIndex + i)}.mp3"
             if not exists(path):
                 convertFile(downloadAudio(playlistIndex + i))
-        
+
 def manageFiles(removeIndex, downloadIndex, back):
-    path = f"music/{getTitle(removeIndex)}.mp3"
+    path = f"{dirName}/music/{getTitle(removeIndex)}.mp3"
     if not back and exists(path):
         os.remove(path)
     convertFile(downloadAudio(downloadIndex))
 
+# manages files to always have them and delete them
 def manageList(back):
-    downloadIndex = 0
-    removeIndex = 0
-    checkNextSong()
-    if not back:
-        if playlistIndex > (playlistLength - 4):
-            downloadIndex = (playlistIndex - playlistLength) + 3
-            removeIndex = playlistIndex - 3
-            manageFiles(removeIndex, downloadIndex, back)
-        elif playlistIndex < 3:
-            downloadIndex = playlistIndex + 4
-            removeIndex = (playlistLength - 2) + playlistIndex
-            manageFiles(removeIndex, downloadIndex, back)
-        else: 
-            manageFiles(playlistIndex - 3, playlistIndex + 4, back)
-    elif playlistIndex >= 2:
-        manageFiles(0, playlistIndex - 2, back)
+    if playlistLength >= 7:
+        downloadIndex = 0
+        removeIndex = 0
+        checkNextSong()
+        if not back:
+            # end of playlist
+            if playlistIndex > (playlistLength - 4):
+                downloadIndex = (playlistIndex - playlistLength) + 3
+                removeIndex = playlistIndex - 3
+                manageFiles(removeIndex, downloadIndex, back)
+            # begining of playlist
+            elif playlistIndex < 3:
+                downloadIndex = playlistIndex + 4
+                removeIndex = (playlistLength - 2) + playlistIndex
+                manageFiles(removeIndex, downloadIndex, back)
+            # middle of playlist
+            else: 
+                manageFiles(playlistIndex - 3, playlistIndex + 4, back)
+        elif playlistIndex >= 2:
+            manageFiles(0, playlistIndex - 2, back)
 
-def mediaControl(paused, seconds, back):
+# print album infos (Album name, Artist, Year)
+def albumPrint():
+    songDescription = playlist['items'][playlistIndex]['snippet']['description']
+    
+    # check if the song's playlist was generated by youtube and therefore, the structure of informations is almost always the same
+    if songDescription[:8] == 'Provided': 
+        songDescription = songDescription[songDescription.find(' · ') + 3:]
+        # check if the structure is the one anticipated
+        if songDescription != -1:
+            songDescription = songDescription[:songDescription.find('℗') + 6]
+            if songDescription != 1:
+                # extracting useful infos from description
+                artist = songDescription[:songDescription.find('\n')]
+                songDescription = songDescription.replace(f"{artist}\n\n", "")
+                album = songDescription[:songDescription.find('\n')]
+                songDescription = songDescription.replace(f"{album}\n\n℗ ", "")
+                date = songDescription
+                print(f"{album} - {artist} - {date}")
+
+def infoPrint(paused, songDuration):
     os.system('cls' if os.name == 'nt' else 'clear')
     titlePlaying = getTitle(playlistIndex)
-    print(f"Now playing: \n{titlePlaying}")
-    print("[P]lay/Pause | [B]ack | [N]ext | [S]top\n> ", end='')
+    print(f"Now playing: \n{titlePlaying}", end='')
+    print(f" [{playlistIndex + 1}/{playlistLength + 1}", end='|')
+    if int(songDuration%60) < 10:
+        print(f"{int(songDuration/60)}:0{int(songDuration%60)}]")
+    else:
+        print(f"{int(songDuration/60)}:{int(songDuration%60)}]")
+    albumPrint()
+    if paused:
+        print("PAUSED")
+    print("\n[P]lay/Pause | [B]ack | [N]ext | [S]top\n> ", end='')
+
+def mediaControl(paused, seconds, back, songDuration):
+    infoPrint(paused, songDuration)
     if seconds == 1:
         manageList(back)
     while True:
-        if not mixer.music.get_busy() and not paused: # add pause because right now, on pause it goes to next because mixer is not busy anymore
+        if not mixer.music.get_busy() and not paused:
             return 'n'
         # Check if there's input available to read without blocking
         if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
@@ -121,37 +157,35 @@ def mediaControl(paused, seconds, back):
             return mediaControl
         
 def playSong(back):
-    path = f"music/{getTitle(playlistIndex)}.mp3" 
+    path = f"{dirName}/music/{getTitle(playlistIndex)}.mp3" 
     if not exists(path):
         print(f"{getTitle(playlistIndex)} could not be played, skipping...")
         return 'n'
+    # song initialization and playing
     mixer.init()
     mixer.music.load(path)
-    mixer.music.set_volume(0.1)
+    mixer.music.set_volume(0.3)
+    a = mixer.Sound(path)
+    songDuration = a.get_length()
     mixer.music.play()
     paused = False
     seconds = 0
 
+    # loop to play song until the end
     while mixer.music.get_busy() or paused:
-        # if seconds == 0:
-        #     manageList(back)
         time.sleep(1)
         seconds += 1
-        
-        action = mediaControl(paused, seconds, back)
+        action = mediaControl(paused, seconds, back, songDuration)
         if action == 'p':
             if paused == False:
                 paused = True
-                print("PAUSED")
                 mixer.music.pause()
             else:
                 paused = False
-                print("PLAYING")
                 mixer.music.unpause()
-        else: 
+        elif action == 's' or action == 'n' or action == 'b':
             mixer.music.stop()
             return action
-
     mixer.music.stop()
     return 'n'
 
@@ -161,17 +195,37 @@ def removeFolderContent(path):
         os.remove(f)
 
 def generateTracklist():
-    f = open('tracklist.txt', 'w')
+    f = open(f"{dirName}/tracklist.txt", 'w')
     for i in range(playlistLength + 1):
         f.write(f"{getTitle(i)}\n")
     f.close()
 
-if __name__ == '__main__':
-    removeFolderContent('music/')
-    removeFolderContent('downloads/')
-    os.remove('tracklist.txt')
+def userInputManagement(userInput):
+    if 'OL' in userInput or 'PL' in userInput:
+        if  'youtube.com' in userInput:
+            if 'music' in userInput:
+                return userInput.replace("https://music.youtube.com/playlist?list=", "")
+            else:
+                return userInput.replace("https://www.youtube.com/playlist?list=", "")
+        else:
+                return userInput
+    else:
+        return "Error"
 
-    playlistId = input("\nEnter the id of the playlist you want to listen to: \n> ")
+if __name__ == '__main__':
+    os.system('cls' if os.name == 'nt' else 'clear')
+    removeFolderContent(f"{dirName}/music/")
+    removeFolderContent(f"{dirName}/downloads/")
+    if exists(f"{dirName}/tracklist.txt"):
+        os.remove(f"{dirName}/tracklist.txt")
+
+    while playlistId == 'Error':
+        playlistId = userInputManagement(input("\nEnter the link of the playlist you want to listen to: \n> "))
+        if playlistId == 'Error':
+            print("Error invalid link or playlist Id")
+        else:
+            break
+    
     playlist = getPlaylistInfos(playlistId)
 
     if playlist['pageInfo']['totalResults'] <= playlist['pageInfo']['resultsPerPage']:
@@ -180,27 +234,35 @@ if __name__ == '__main__':
         playlistLength = (playlist['pageInfo']['resultsPerPage']) - 1
     
     generateTracklist()
-        
-    print("Downloading...")
 
-    for i in range(5):
-        convertFile(downloadAudio(playlistIndex + i))
+    if playlistLength > 1:
+        print("Downloading...")
 
-    convertFile(downloadAudio(playlistLength - 1))
-    convertFile(downloadAudio(playlistLength))
+        if playlistLength >= 7:
+            for i in range(5):
+                convertFile(downloadAudio(playlistIndex + i))
 
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-    while 1:
-        outputPlay = playSong(back)
-
-        if outputPlay == 'b':
-            back = True
-            playlistIndex = changeIndex(playlistIndex, back)
-
-        elif outputPlay == 'n':
-            back = False
-            playlistIndex = changeIndex(playlistIndex, back)
-        
+            convertFile(downloadAudio(playlistLength - 1))
+            convertFile(downloadAudio(playlistLength))
         else:
-            break
+            for i in range(playlistLength):
+                convertFile(downloadAudio(playlistIndex + i))
+
+        os.system('cls' if os.name == 'nt' else 'clear')
+
+        while 1:
+            outputPlay = playSong(back)
+
+            if outputPlay == 'b':
+                back = True
+                playlistIndex = changeIndex(playlistIndex, back)
+
+            elif outputPlay == 'n':
+                back = False
+                playlistIndex = changeIndex(playlistIndex, back)
+            
+            else:
+                os.system('cls' if os.name == 'nt' else 'clear')
+                break
+    else:
+        print("Error: playlist to short :(")
