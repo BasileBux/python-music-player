@@ -5,6 +5,7 @@ from pygame import mixer
 from pydub import AudioSegment
 from dotenv import load_dotenv
 from os.path import exists
+from datetime import datetime
 load_dotenv()
 youtubeApiKey = os.getenv('YOUTBE_API_KEY')
 
@@ -33,6 +34,8 @@ def getTitle(videoIndex):
     return playlist['items'][videoIndex]['snippet']['title']
 
 def convertFile(mediaName):
+    if mediaName == 'Error':
+        return 'Error'
     inputPath = f"{dirName}/downloads/{mediaName}.mp3"
     outputPath = f"{dirName}/music/{mediaName}.mp3"
     if exists(inputPath):
@@ -53,20 +56,21 @@ def downloadAudio(videoIndex):
         try:
             yt = YouTube(url)
         except PytubeError as e:
-            addLog(f"Error: {output_path} could not be downloaded")
+            addLog(f"Error: {output_path}/{mediaName}.mp3 could not be downloaded")
             return "Error"
         else:
             try:
                 audio_stream = yt.streams.filter(only_audio=True).first()
             except PytubeError as e:
-                addLog(f"Error: {output_path} could not be downloaded")
+                addLog(f"Error: {output_path}/{mediaName}.mp3 could not be downloaded")
                 return "Error"
             else:
                 filename = f"{mediaName}.mp3"
                 audio_stream.download(output_path=output_path, filename=filename)
-                addLog(f"File: {output_path} downloaded successfully")
+                addLog(f"File: {output_path}/{mediaName}.mp3 downloaded successfully")
                 return mediaName
     else:
+        addLog(f"File: {dirName}/music/{mediaName}.mp3 already exists")
         return "Error"
 
 # loop playlistIndex inside the range defined by playlistLength
@@ -90,9 +94,10 @@ def checkNextSong():
                 convertFile(downloadAudio(playlistIndex + i))
 
 def manageFiles(removeIndex, downloadIndex, back):
-    path = f"{dirName}/music/{getTitle(removeIndex)}.mp3"
-    if not back and exists(path):
-        os.remove(path)
+    if removeIndex != 'Error':
+        path = f"{dirName}/music/{getTitle(removeIndex)}.mp3"
+        if not back and exists(path):
+            os.remove(path)
     convertFile(downloadAudio(downloadIndex))
 
 # manages files to always have them and delete them
@@ -116,7 +121,7 @@ def manageList(back):
             else: 
                 manageFiles(playlistIndex - 3, playlistIndex + 4, back)
         elif playlistIndex >= 2:
-            manageFiles(0, playlistIndex - 2, back)
+            manageFiles('Error', playlistIndex - 2, back)
 
 # print album infos (Album name, Artist, Year)
 def albumPrint():
@@ -148,7 +153,7 @@ def infoPrint(paused, songDuration):
     albumPrint()
     if paused:
         print("PAUSED")
-    print("\n[P]lay/Pause | [B]ack | [N]ext | [S]top\n> ", end='')
+    print("\n[P]lay/Pause | [B]ack | [N]ext | [S]top\n> ", end="")
 
 def mediaControl(paused, seconds, back, songDuration):
     infoPrint(paused, songDuration)
@@ -165,7 +170,7 @@ def mediaControl(paused, seconds, back, songDuration):
 def playSong(back):
     path = f"{dirName}/music/{getTitle(playlistIndex)}.mp3" 
     if not exists(path):
-        print(f"{getTitle(playlistIndex)} could not be played, skipping...")
+        addLog(f"Error: {getTitle(playlistIndex)} could not be played")
         return 'n'
     # song initialization and playing
     mixer.init()
@@ -209,14 +214,21 @@ def generateTracklist():
     f.close()
     addLog(f"File: {dirName}/tracklist.txt generated")
 
+def logGetTime():
+    now = str(datetime.now())
+    now = now[:-7]
+    return now
+
 def generateLog():
-    f = open(f"{dirName}/logs.txt", 'w')
-    f.write(f"File: {dirName}/logs.txt created")
+    if exists(f"{dirName}/main.log"):
+        os.remove(f"{dirName}/main.log")
+    f = open(f"{dirName}/main.log", 'w')
+    f.write(f"{logGetTime()} File: {dirName}/main.log created\n")
     f.close()
 
 def addLog(message):
-    f = open(f"{dirName}/logs.txt", 'a')
-    f.write(f"{message}\n")
+    f = open(f"{dirName}/main.log", 'a')
+    f.write(f"{logGetTime()} {message}\n")
     f.close()
 
 def userInputManagement(userInput):
@@ -238,8 +250,6 @@ if __name__ == '__main__':
     if exists(f"{dirName}/tracklist.txt"):
         os.remove(f"{dirName}/tracklist.txt")
     
-    if exists(f"{dirName}/logs.txt"):
-        os.remove(f"{dirName}/logs.txt")
     generateLog()
 
 
@@ -286,6 +296,7 @@ if __name__ == '__main__':
                 playlistIndex = changeIndex(playlistIndex, back)
             
             else:
+                addLog("Script: 's' interrupt")
                 os.system('cls' if os.name == 'nt' else 'clear')
                 break
     else:
