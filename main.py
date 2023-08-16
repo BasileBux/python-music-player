@@ -4,17 +4,21 @@ from pytube.exceptions import PytubeError
 from pygame import mixer
 from pydub import AudioSegment
 from dotenv import load_dotenv
-from os.path import exists
+from os.path import exists, isdir
 from datetime import datetime
-load_dotenv()
-youtubeApiKey = os.getenv('YOUTBE_API_KEY')
 
+youtubeApiKey = ""
 playlistIndex = 0
 playlistLength = 0
 back = True
 playlist = ""
 playlistId = "Error"
 dirName = os.path.dirname(__file__)
+
+def getEnv():
+    global youtubeApiKey
+    load_dotenv()
+    youtubeApiKey = os.getenv('YOUTBE_API_KEY')
 
 def getPlaylistInfos(playlistId):
     apiUrl = "https://youtube.googleapis.com/youtube/v3/playlistItems?part=snippet%2CcontentDetails&maxResults=50&playlistId={}&key={}".format(playlistId, youtubeApiKey)
@@ -179,7 +183,7 @@ def playSong(back):
     a = mixer.Sound(path)
     songDuration = a.get_length()
     mixer.music.play()
-    addLog(f"Playback: strating {path} playback")
+    addLog(f"Playback: {path} strating playback")
     paused = False
     seconds = 0
 
@@ -202,10 +206,10 @@ def playSong(back):
     return 'n'
 
 def removeFolderContent(path):
-    filelist = glob.glob(os.path.join(f"{dirName}/{path}", "*"))
+    filelist = glob.glob(os.path.join(f"{dirName}/{path}/", "*"))
     for f in filelist:
         os.remove(f)
-    addLog(f"File: emptied {filelist} folder")
+    addLog(f"File: emptied {dirName}/{path} folder")
 
 def generateTracklist():
     f = open(f"{dirName}/tracklist.txt", 'w')
@@ -213,6 +217,19 @@ def generateTracklist():
         f.write(f"{getTitle(i)}\n")
     f.close()
     addLog(f"File: {dirName}/tracklist.txt generated")
+
+def envSetup():
+    global youtubeApiKey
+    if not exists(f"{dirName}/.env"):
+        f = open(f"{dirName}/.env", "w")
+        youtubeApiKey = input("Enter your youtube API key\n> ")
+        f.write(f"YOUTBE_API_KEY=\"{youtubeApiKey}\"")
+        f.close()
+        os.system('cls' if os.name == 'nt' else 'clear')
+        addLog("Debug: .env file created storing API key")
+    else: 
+        getEnv()
+        addLog("Debug: API key extracted from env")
 
 def logGetTime():
     now = str(datetime.now())
@@ -234,23 +251,30 @@ def addLog(message):
 def userInputManagement(userInput):
     if 'OL' in userInput or 'PL' in userInput:
         if  'youtube.com' in userInput:
-            if 'music' in userInput:
-                return userInput.replace("https://music.youtube.com/playlist?list=", "")
-            else:
-                return userInput.replace("https://www.youtube.com/playlist?list=", "")
+            return userInput[userInput.find('list=') + 5:]
         else:
-                return userInput
+            return userInput
     else:
         return "Error"
 
 if __name__ == '__main__':
     os.system('cls' if os.name == 'nt' else 'clear')
-    removeFolderContent("music/")
-    removeFolderContent("downloads/")
+    generateLog()
+    envSetup()
+    if not isdir(f"{dirName}/music"):
+        os.makedirs(f"{dirName}/music")
+        addLog(f"File: {dirName}/music directory was created")
+    else:
+        removeFolderContent("music")
+    
+    if not isdir(f"{dirName}/downloads"):
+        os.makedirs(f"{dirName}/downloads")
+        addLog(f"File: {dirName}/downloads directory was created")
+    else:
+        removeFolderContent("downloads")
+
     if exists(f"{dirName}/tracklist.txt"):
         os.remove(f"{dirName}/tracklist.txt")
-    
-    generateLog()
 
 
     while playlistId == 'Error':

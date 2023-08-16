@@ -58,10 +58,11 @@ A big restriction of this program is that, for various reasons, YouTube videos c
 ```bash
 pip install -r requirements.txt
 ```
-3. Create a `.env` file in the main folder and add your YouTube API key:
+3. Run the main script:
 ```bash
-YOUTBE_API_KEY='your-api-key'
+python main.py
 ```
+4. On the first startup, it will ask you your youtube API key. Enter it and it will be stored in a `.env` file. 
 <details>
 <summary>To get your API key, follow this guide. </summary>
 <!-- <br> -->
@@ -76,14 +77,9 @@ YOUTBE_API_KEY='your-api-key'
 </ul>
 Guide from: <a href="https://blog.hubspot.com/website/how-to-get-youtube-api-key" target="_blank">HubSpot</a>
 </details>
-<br>
 
-1. Run the main script:
-```bash
-python main.py
-```
-1. Enter the YouTube playlist ID as prompted.
-2. Enjoy the music! Use the provided controls to navigate through the playlist.
+5. Enter the YouTube playlist ID as prompted.
+6. Enjoy the music! Use the provided controls to navigate through the playlist.
 
 ## Next features
 - [x] Add possibility to give a youtube playlist link
