@@ -14,14 +14,15 @@ Kenya Grace - Meteor [4/50|2:21]
 ```
 <details>
 <summary>Interface explanation</summary>
-    <code>
     If your playlist is an album it will display the album name, artist, date under the video title. 
 
+    <code>
     Now playing:
     YouTube video title [number in list/number of songs|song duration]
 
     press "p" to play/pause | press "b" to go to previous song | press "n" to go to next song | press "s" to stop program
     >
+    </code>
 </details>
 <br>
 
