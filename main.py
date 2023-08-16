@@ -38,7 +38,11 @@ def convertFile(mediaName):
     if exists(inputPath):
         sound = AudioSegment.from_file(inputPath)
         sound.export(outputPath, format="mp3", bitrate="128k")
+        addLog(f"File: {outputPath} file converted successfully")
         os.remove(inputPath)
+        addLog(f"File: {inputPath} removed successfully")
+    else:
+        addLog(f"Error: {inputPath} not found, no possible conversion")
 
 def downloadAudio(videoIndex):
     url = getUrl(videoIndex)
@@ -49,15 +53,18 @@ def downloadAudio(videoIndex):
         try:
             yt = YouTube(url)
         except PytubeError as e:
+            addLog(f"Error: {output_path} could not be downloaded")
             return "Error"
         else:
             try:
                 audio_stream = yt.streams.filter(only_audio=True).first()
             except PytubeError as e:
+                addLog(f"Error: {output_path} could not be downloaded")
                 return "Error"
             else:
                 filename = f"{mediaName}.mp3"
                 audio_stream.download(output_path=output_path, filename=filename)
+                addLog(f"File: {output_path} downloaded successfully")
                 return mediaName
     else:
         return "Error"
@@ -119,16 +126,15 @@ def albumPrint():
     if songDescription[:8] == 'Provided': 
         songDescription = songDescription[songDescription.find(' · ') + 3:]
         # check if the structure is the one anticipated
-        if songDescription != -1:
+        if songDescription.find(' · ') != -1 and songDescription.find('℗') != -1:
             songDescription = songDescription[:songDescription.find('℗') + 6]
-            if songDescription != 1:
-                # extracting useful infos from description
-                artist = songDescription[:songDescription.find('\n')]
-                songDescription = songDescription.replace(f"{artist}\n\n", "")
-                album = songDescription[:songDescription.find('\n')]
-                songDescription = songDescription.replace(f"{album}\n\n℗ ", "")
-                date = songDescription
-                print(f"{album} - {artist} - {date}")
+            # extracting useful infos from description
+            artist = songDescription[:songDescription.find('\n')]
+            songDescription = songDescription.replace(f"{artist}\n\n", "")
+            album = songDescription[:songDescription.find('\n')]
+            songDescription = songDescription.replace(f"{album}\n\n℗ ", "")
+            date = songDescription
+            print(f"{album} - {artist} - {date}")
 
 def infoPrint(paused, songDuration):
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -168,6 +174,7 @@ def playSong(back):
     a = mixer.Sound(path)
     songDuration = a.get_length()
     mixer.music.play()
+    addLog(f"Playback: strating {path} playback")
     paused = False
     seconds = 0
 
@@ -190,14 +197,26 @@ def playSong(back):
     return 'n'
 
 def removeFolderContent(path):
-    filelist = glob.glob(os.path.join(path, "*"))
+    filelist = glob.glob(os.path.join(f"{dirName}/{path}", "*"))
     for f in filelist:
         os.remove(f)
+    addLog(f"File: emptied {filelist} folder")
 
 def generateTracklist():
     f = open(f"{dirName}/tracklist.txt", 'w')
     for i in range(playlistLength + 1):
         f.write(f"{getTitle(i)}\n")
+    f.close()
+    addLog(f"File: {dirName}/tracklist.txt generated")
+
+def generateLog():
+    f = open(f"{dirName}/logs.txt", 'w')
+    f.write(f"File: {dirName}/logs.txt created")
+    f.close()
+
+def addLog(message):
+    f = open(f"{dirName}/logs.txt", 'a')
+    f.write(f"{message}\n")
     f.close()
 
 def userInputManagement(userInput):
@@ -214,10 +233,15 @@ def userInputManagement(userInput):
 
 if __name__ == '__main__':
     os.system('cls' if os.name == 'nt' else 'clear')
-    removeFolderContent(f"{dirName}/music/")
-    removeFolderContent(f"{dirName}/downloads/")
+    removeFolderContent("music/")
+    removeFolderContent("downloads/")
     if exists(f"{dirName}/tracklist.txt"):
         os.remove(f"{dirName}/tracklist.txt")
+    
+    if exists(f"{dirName}/logs.txt"):
+        os.remove(f"{dirName}/logs.txt")
+    generateLog()
+
 
     while playlistId == 'Error':
         playlistId = userInputManagement(input("\nEnter the link of the playlist you want to listen to: \n> "))
