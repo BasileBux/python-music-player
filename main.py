@@ -14,6 +14,8 @@ back = True
 playlist = ""
 playlistId = "Error"
 dirName = os.path.dirname(__file__)
+loop = 0
+guts = False
 
 def getEnv():
     global youtubeApiKey
@@ -52,8 +54,13 @@ def convertFile(mediaName):
         addLog(f"Error: {inputPath} not found, no possible conversion")
 
 def downloadAudio(videoIndex):
-    url = getUrl(videoIndex)
-    mediaName = getTitle(videoIndex)
+    global guts
+    if guts:
+        mediaName = "grifith"
+        url = f"https://www.youtube.com/watch?v=izGwDsrQ1eQ"
+    else:
+        url = getUrl(videoIndex)
+        mediaName = getTitle(videoIndex)
     output_path = f"{dirName}/downloads"
 
     if not exists(f"{dirName}/music/{mediaName}.mp3"):
@@ -155,9 +162,11 @@ def infoPrint(paused, songDuration):
     else:
         print(f"{int(songDuration/60)}:{int(songDuration%60)}]")
     albumPrint()
+    if loop != 0:
+        print(f"plays left: {loop}")
     if paused:
         print("PAUSED")
-    print("\n[P]lay/Pause | [B]ack | [N]ext | [S]top\n> ", end="")
+    print("\n[P]lay/Pause | [B]ack | [N]ext | [S]top | Loop [x]\n> ", end="")
 
 def mediaControl(paused, seconds, back, songDuration):
     infoPrint(paused, songDuration)
@@ -165,14 +174,19 @@ def mediaControl(paused, seconds, back, songDuration):
         manageList(back)
     while True:
         if not mixer.music.get_busy() and not paused:
-            return 'n'
+            return 'f'
         # Check if there's input available to read without blocking
         if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
             mediaControl = input("")
             return mediaControl
         
 def playSong(back):
-    path = f"{dirName}/music/{getTitle(playlistIndex)}.mp3" 
+    global loop, guts
+    if guts:
+        path = f"{dirName}/music/grifith.mp3"
+        guts = False
+    else:
+        path = f"{dirName}/music/{getTitle(playlistIndex)}.mp3" 
     if not exists(path):
         addLog(f"Error: {getTitle(playlistIndex)} could not be played")
         return 'n'
@@ -199,9 +213,25 @@ def playSong(back):
             else:
                 paused = False
                 mixer.music.unpause()
+
+        elif action.isdigit():
+            loop += int(action)
+            if loop == (70 - 1):
+                mixer.music.stop()
+                return 'c'
+        
+        elif action == 'f':
+            if loop != 0:
+                loop -= 1
+            mixer.music.stop()
+            return 'n'
+            
         elif action == 's' or action == 'n' or action == 'b':
+            loop = 0
             mixer.music.stop()
             return action
+    if loop != 0:
+        loop -= 1
     mixer.music.stop()
     return 'n'
 
@@ -211,12 +241,25 @@ def removeFolderContent(path):
         os.remove(f)
     addLog(f"File: emptied {dirName}/{path} folder")
 
+def directoryGestion(path):
+    if not isdir(f"{dirName}/{path}"):
+        os.makedirs(f"{dirName}/{path}")
+        addLog(f"File: {dirName}/{path} directory was created")
+    else:
+        removeFolderContent(path)
+
 def generateTracklist():
     f = open(f"{dirName}/tracklist.txt", 'w')
     for i in range(playlistLength + 1):
         f.write(f"{getTitle(i)}\n")
     f.close()
     addLog(f"File: {dirName}/tracklist.txt generated")
+
+def getPlaylistLength():
+    if playlist['pageInfo']['totalResults'] <= playlist['pageInfo']['resultsPerPage']:
+            return (playlist['pageInfo']['totalResults']) - 1
+    else:
+        return (playlist['pageInfo']['resultsPerPage']) - 1
 
 def envSetup():
     global youtubeApiKey
@@ -261,21 +304,11 @@ if __name__ == '__main__':
     os.system('cls' if os.name == 'nt' else 'clear')
     generateLog()
     envSetup()
-    if not isdir(f"{dirName}/music"):
-        os.makedirs(f"{dirName}/music")
-        addLog(f"File: {dirName}/music directory was created")
-    else:
-        removeFolderContent("music")
-    
-    if not isdir(f"{dirName}/downloads"):
-        os.makedirs(f"{dirName}/downloads")
-        addLog(f"File: {dirName}/downloads directory was created")
-    else:
-        removeFolderContent("downloads")
+    directoryGestion("music")
+    directoryGestion("downloads")
 
     if exists(f"{dirName}/tracklist.txt"):
         os.remove(f"{dirName}/tracklist.txt")
-
 
     while playlistId == 'Error':
         playlistId = userInputManagement(input("\nEnter the link of the playlist you want to listen to: \n> "))
@@ -286,10 +319,7 @@ if __name__ == '__main__':
     
     playlist = getPlaylistInfos(playlistId)
 
-    if playlist['pageInfo']['totalResults'] <= playlist['pageInfo']['resultsPerPage']:
-        playlistLength = (playlist['pageInfo']['totalResults']) - 1
-    else:
-        playlistLength = (playlist['pageInfo']['resultsPerPage']) - 1
+    playlistLength = getPlaylistLength()
     
     generateTracklist()
 
@@ -317,8 +347,16 @@ if __name__ == '__main__':
 
             elif outputPlay == 'n':
                 back = False
-                playlistIndex = changeIndex(playlistIndex, back)
-            
+                if loop == 0:
+                    playlistIndex = changeIndex(playlistIndex, back)
+
+            elif outputPlay == 'c':
+                back = False
+                guts = True
+                convertFile(downloadAudio(0))
+
+
+
             else:
                 addLog("Script: 's' interrupt")
                 os.system('cls' if os.name == 'nt' else 'clear')

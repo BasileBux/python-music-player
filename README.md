@@ -9,20 +9,18 @@ With the [YouTube API](https://developers.google.com/youtube/v3/), it fetches th
 Now playing: 
 Kenya Grace - Meteor [4/50|2:21]
 
-[P]lay/Pause | [B]ack | [N]ext | [S]top
+[P]lay/Pause | [B]ack | [N]ext | [S]top | Loop [x]
 > 
 ```
 <details>
 <summary>Interface explanation</summary>
     If your playlist is an album it will display the album name, artist, date under the video title. 
 
-    <code>
     Now playing:
     YouTube video title [number in list/number of songs|song duration]
 
-    press "p" to play/pause | press "b" to go to previous song | press "n" to go to next song | press "s" to stop program
+    enter "p" to play/pause | enter "b" to go to previous song | enter "n" to go to next song | enter "s" to stop program | enter the numer of loops you want to have
     >
-    </code>
 </details>
 <br>
 
@@ -30,7 +28,7 @@ Kenya Grace - Meteor [4/50|2:21]
 
 When you run the program, it will ask you to enter a valid YouTube playlist link. You can also enter a playlist Id. Note that albums count as playlists so you can read them too.
 
-Then, it will download some songs (it may take a bit of time ~30s) and there you go!
+Then, it will download some songs (it may take a bit of time (depends highly on your internet connection) ~30s) and there you go!
 
 Now, navigate with the controls (characters inside the square brackets).
 
@@ -87,4 +85,4 @@ Guide from: <a href="https://blog.hubspot.com/website/how-to-get-youtube-api-key
 - [x] Add index in playlist (7/23)
 - [x] Add paused status when paused in print
 - [x] If playlist is an album, print artist name, album name, album date (still a bit weird things)
-- [ ] Add loop once and loop infinitely controls
+- [x] Add loop once and loop infinitely controls
