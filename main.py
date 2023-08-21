@@ -37,7 +37,12 @@ def getUrl(videoIndex):
     return url
 
 def getTitle(videoIndex):
-    return playlist['items'][videoIndex]['snippet']['title']
+    title = playlist['items'][videoIndex]['snippet']['title']
+    if '/' in title:
+        title = title.replace('/', '')
+        return title
+    else: 
+        return title
 
 def convertFile(mediaName):
     if mediaName == 'Error':
@@ -87,7 +92,7 @@ def downloadAudio(videoIndex):
 # loop playlistIndex inside the range defined by playlistLength
 def changeIndex(playlistIndex, back):
     if not back:
-        if playlistIndex == playlistLength:
+        if playlistIndex >= playlistLength:
             return 0
         else:
             return playlistIndex + 1
@@ -98,11 +103,33 @@ def changeIndex(playlistIndex, back):
 
 # checks if all the next songs are downloaded and if not, downloads them
 def checkNextSong():
-    for i in range(5):
-        if playlistIndex + 4 <= playlistLength: 
-            path = f"{dirName}/music/{getTitle(playlistIndex + i)}.mp3"
+    if playlistIndex + 4 <= playlistLength: 
+        for i in range(5):
+            path = f"{dirName}/music/{getTitle(playlistIndex + (i + 1))}.mp3"
             if not exists(path):
-                convertFile(downloadAudio(playlistIndex + i))
+                convertFile(downloadAudio(playlistIndex + (i + 1)))
+    else: 
+        for i in range(playlistLength - playlistIndex):
+            path = f"{dirName}/music/{getTitle(playlistIndex + (i + 1))}.mp3"
+            if not exists(path):
+                convertFile(downloadAudio(playlistIndex + (i + 1)))
+
+def checkSong(songIndex):
+    if not exists(f"{dirName}/music/{getTitle(songIndex)}.mp3"):
+        convertFile(downloadAudio(songIndex))
+
+def checkPrevSong():
+    if playlistIndex - 2 >= 0: 
+        for i in range(3):
+            path = f"{dirName}/music/{getTitle(playlistIndex - i)}.mp3"
+            if not exists(path):
+                convertFile(downloadAudio(playlistIndex - i))
+    else: 
+        for i in range(playlistIndex):
+            path = f"{dirName}/music/{getTitle(playlistIndex - (i + 1))}.mp3"
+            if not exists(path):
+                convertFile(downloadAudio(playlistIndex - (i + 1)))
+
 
 def manageFiles(removeIndex, downloadIndex, back):
     if removeIndex != 'Error':
@@ -117,6 +144,7 @@ def manageList(back):
         downloadIndex = 0
         removeIndex = 0
         checkNextSong()
+        checkPrevSong()
         if not back:
             # end of playlist
             if playlistIndex > (playlistLength - 4):
@@ -133,6 +161,10 @@ def manageList(back):
                 manageFiles(playlistIndex - 3, playlistIndex + 4, back)
         elif playlistIndex >= 2:
             manageFiles('Error', playlistIndex - 2, back)
+
+def goToGestion():
+    removeFolderOverload()
+    checkSong(playlistIndex)
 
 # print album infos (Album name, Artist, Year)
 def albumPrint():
@@ -181,7 +213,7 @@ def mediaControl(paused, seconds, back, songDuration):
             return mediaControl
         
 def playSong(back):
-    global loop, guts
+    global loop, guts, playlistIndex
     if guts:
         path = f"{dirName}/music/grifith.mp3"
         guts = False
@@ -200,7 +232,6 @@ def playSong(back):
     addLog(f"Playback: {path} strating playback")
     paused = False
     seconds = 0
-
     # loop to play song until the end
     while mixer.music.get_busy() or paused:
         time.sleep(1)
@@ -225,6 +256,25 @@ def playSong(back):
                 loop -= 1
             mixer.music.stop()
             return 'n'
+
+        elif 'goto' in action:
+            if 'goto ' in action:
+                goTo = action.replace('goto ', '')
+            else:
+                goTo = action.replace('goto', '')
+            if goTo.isdigit():
+                goTo = int(goTo)
+                if goTo <= playlistLength + 1 and goTo >= 1:
+                    if goTo == playlistIndex:
+                        loop = 0
+                        mixer.music.stop()
+                        return 'b'
+                    elif goTo == playlistIndex + 2:
+                        loop = 0
+                        mixer.music.stop()
+                        return 'n'
+                    playlistIndex = goTo - 1
+                    return 'g'
             
         elif action == 's' or action == 'n' or action == 'b':
             loop = 0
@@ -241,6 +291,21 @@ def removeFolderContent(path):
         os.remove(f)
     addLog(f"File: emptied {dirName}/{path} folder")
 
+def removeFolderOverload():
+    global playlistIndex
+    filelist = glob.glob(os.path.join(f"{dirName}/music/", "*"))
+    for f in filelist:
+        if playlistIndex >= 2 and playlistIndex <= playlistLength - 4:
+            for i in range(playlistIndex - 2, playlistIndex + 5):
+                if f == f"{dirName}/music/{getTitle(i)}.mp3":
+                    remove = False
+                    break
+                else:
+                    remove = True
+            if remove == True:
+                os.remove(f)
+
+
 def directoryGestion(path):
     if not isdir(f"{dirName}/{path}"):
         os.makedirs(f"{dirName}/{path}")
@@ -251,7 +316,7 @@ def directoryGestion(path):
 def generateTracklist():
     f = open(f"{dirName}/tracklist.txt", 'w')
     for i in range(playlistLength + 1):
-        f.write(f"{getTitle(i)}\n")
+        f.write(f"{i + 1}. {getTitle(i)}\n")
     f.close()
     addLog(f"File: {dirName}/tracklist.txt generated")
 
@@ -292,7 +357,7 @@ def addLog(message):
     f.close()
 
 def userInputManagement(userInput):
-    if 'OL' in userInput or 'PL' in userInput:
+    if 'OL' in userInput or 'PL' in userInput or "RDC" in userInput:
         if  'youtube.com' in userInput:
             return userInput[userInput.find('list=') + 5:]
         else:
@@ -344,18 +409,22 @@ if __name__ == '__main__':
             if outputPlay == 'b':
                 back = True
                 playlistIndex = changeIndex(playlistIndex, back)
+                checkSong(playlistIndex)
 
             elif outputPlay == 'n':
                 back = False
                 if loop == 0:
                     playlistIndex = changeIndex(playlistIndex, back)
+                    checkSong(playlistIndex)
+
+            elif outputPlay == 'g':
+                back = False
+                goToGestion()
 
             elif outputPlay == 'c':
                 back = False
                 guts = True
                 convertFile(downloadAudio(0))
-
-
 
             else:
                 addLog("Script: 's' interrupt")

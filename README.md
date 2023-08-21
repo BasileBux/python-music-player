@@ -14,7 +14,10 @@ Kenya Grace - Meteor [4/50|2:21]
 ```
 <details>
 <summary>Interface explanation</summary>
-    If your playlist is an album it will display the album name, artist, date under the video title. 
+    <ul>
+    <li>If your playlist is an album it will display the album name, artist, date under the video title
+    <li>There is also a "goto" command, which plays a song by giving its index in the playlist (tracklist with indexes can be found in "tracklist.txt"), just enter "goto x" with x being the index
+    </ul>
 
     Now playing:
     YouTube video title [number in list/number of songs|song duration]
@@ -37,7 +40,7 @@ You can also access the tracklist in the tracklist.txt file.
 ### Limitations
 Due to the youtube API's limitations, the maximum length of the playlist is 50 songs. Your playlist can be longer but just keep in mind that only the first 50 songs will be played. 
 
-When a new song strats, the media controls print instanly but the actions are delayed by the background process of managing the song list (delete / download). 
+When a new song starts, the media controls print instantly but the actions are delayed by the background process of managing the song list (delete / download). 
 
 ### Specific
 The mp3 files that are downloaded by PyTube aren't readable by PyGame's mixer. I tried the VLC Python module, which can read these files, but the module is pretty bad overall. The solution I went with was to convert the file with Pydub. Which creates a file that Pygame's mixer can read.
@@ -47,8 +50,6 @@ The mp3 files that are downloaded by PyTube aren't readable by PyGame's mixer. I
 
 ### :warning: Possible Issues
 A big restriction of this program is that, for various reasons, YouTube videos cannot be downloaded. This is annoying because it means that some songs from your playlist won't be played. I use the PyTube exceptions to skip downloading these songs and stop the program from crashing. But with the way that file management is done, this issue could make the playlist unreadable.
-
-? Struggling with kpop playlists ??? (maybe non-ascii chars ?)
 
 ## How to use
 1. Install Python 3.8 or higher if not already installed.
@@ -86,3 +87,4 @@ Guide from: <a href="https://blog.hubspot.com/website/how-to-get-youtube-api-key
 - [x] Add paused status when paused in print
 - [x] If playlist is an album, print artist name, album name, album date (still a bit weird things)
 - [x] Add loop once and loop infinitely controls
+- [ ] Add goto [Index] function
