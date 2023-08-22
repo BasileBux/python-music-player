@@ -383,18 +383,14 @@ if __name__ == '__main__':
             break
     
     playlist = getPlaylistInfos(playlistId)
-
     playlistLength = getPlaylistLength()
-    
     generateTracklist()
 
     if playlistLength > 1:
         print("Downloading...")
-
         if playlistLength >= 7:
             for i in range(5):
                 convertFile(downloadAudio(playlistIndex + i))
-
             convertFile(downloadAudio(playlistLength - 1))
             convertFile(downloadAudio(playlistLength))
         else:
