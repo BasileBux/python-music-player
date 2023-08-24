@@ -79,12 +79,3 @@ Guide from: <a href="https://blog.hubspot.com/website/how-to-get-youtube-api-key
 
 5. Enter the YouTube playlist ID as prompted.
 6. Enjoy the music! Use the provided controls to navigate through the playlist.
-
-## Next features
-- [x] Add possibility to give a youtube playlist link
-- [x] Add song duration
-- [x] Add index in playlist (7/23)
-- [x] Add paused status when paused in print
-- [x] If playlist is an album, print artist name, album name, album date (still a bit weird things)
-- [x] Add loop once and loop infinitely controls
-- [ ] Add goto [Index] function
