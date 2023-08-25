@@ -78,4 +78,11 @@ Guide from: <a href="https://blog.hubspot.com/website/how-to-get-youtube-api-key
 </details>
 
 5. Enter the YouTube playlist ID as prompted.
-6. Enjoy the music! Use the provided controls to navigate through the playlist.
+
+## Note
+- Please be aware that downloading copyrighted material from YouTube without proper authorization may violate YouTube's terms of service and copyright laws in your jurisdiction. Ensure that you have the right to download and use the content before proceeding.
+
+- This script was designed based on the state of the libraries and the environment up to my last knowledge update in August 2023. It's possible that updates or changes to the libraries or the YouTube platform could impact the script's functionality.
+
+## Disclaimer
+This script is provided for educational and informational purposes only. The authors do not endorse or promote the unauthorized downloading of copyrighted material from the internet. Use this script responsibly and in compliance with relevant laws and terms of service.

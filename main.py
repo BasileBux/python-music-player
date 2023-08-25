@@ -249,12 +249,14 @@ def playSong(back):
             loop += int(action)
             if loop == (70 - 1):
                 mixer.music.stop()
+                mixer.quit()
                 return 'c'
         
         elif action == 'f':
             if loop != 0:
                 loop -= 1
             mixer.music.stop()
+            mixer.quit()
             return 'n'
 
         elif 'goto' in action:
@@ -268,10 +270,12 @@ def playSong(back):
                     if goTo == playlistIndex:
                         loop = 0
                         mixer.music.stop()
+                        mixer.quit()
                         return 'b'
                     elif goTo == playlistIndex + 2:
                         loop = 0
                         mixer.music.stop()
+                        mixer.quit()
                         return 'n'
                     playlistIndex = goTo - 1
                     return 'g'
@@ -279,10 +283,12 @@ def playSong(back):
         elif action == 's' or action == 'n' or action == 'b':
             loop = 0
             mixer.music.stop()
+            mixer.quit()
             return action
     if loop != 0:
         loop -= 1
     mixer.music.stop()
+    mixer.quit()
     return 'n'
 
 def removeFolderContent(path):
