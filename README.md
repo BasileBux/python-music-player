@@ -16,7 +16,6 @@ Kenya Grace - Meteor [4/50|2:21]
 <summary>Interface explanation</summary>
     <ul>
     <li>If your playlist is an album it will display the album name, artist, date under the video title
-    <li>There is also a "goto" command, which plays a song by giving its index in the playlist (tracklist with indexes can be found in "tracklist.txt"), just enter "goto x" with x being the index
     </ul>
 
     Now playing:
@@ -25,6 +24,28 @@ Kenya Grace - Meteor [4/50|2:21]
     enter "p" to play/pause | enter "b" to go to previous song | enter "n" to go to next song | enter "s" to stop program | enter the numer of loops you want to have
     >
 </details>
+<br>
+
+| Command                   | Function                    |
+|---------------------------|-----------------------------|
+| `p`                       | Play / Pause                |
+| `b`                       | Previous song               |
+| `n`                       | Next song                   |
+| `s` or `q`                | Close program               |
+| `x` x being a number      | Loop song x number of times |
+| `goto x` x being a number | Go to song x in the list    |
+| `l`                       | Open tracklist menu         |
+<br>
+
+#### Inside tracklist menu: 
+| Command              | Function             |
+|----------------------|----------------------|
+| `directional arrows` | Move up / down       |
+| `space` or `enter`   | Play selected song   |
+| `q`                  | Go back to main menu |
+
+Note: green song = song playing
+
 <br>
 
 ![python-function-general](assets/python-youtube-player-general.png)

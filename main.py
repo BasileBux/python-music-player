@@ -6,6 +6,7 @@ from pydub import AudioSegment
 from dotenv import load_dotenv
 from os.path import exists, isdir
 from datetime import datetime
+from tracklist import getTracklist, printTracklist, tracklistActions
 
 youtubeApiKey = ""
 playlistIndex = 0
@@ -16,6 +17,7 @@ playlistId = "Error"
 dirName = os.path.dirname(__file__)
 loop = 0
 guts = False
+tracklist = []
 
 def getEnv():
     global youtubeApiKey
@@ -279,8 +281,17 @@ def playSong(back):
                         return 'n'
                     playlistIndex = goTo - 1
                     return 'g'
-            
-        elif action == 's' or action == 'n' or action == 'b':
+        
+        elif action == 'l':
+            tracklistGestion = tracklistFunction()
+            if tracklistGestion != -1:
+                playlistIndex = tracklistGestion
+                loop = 0
+                mixer.music.stop()
+                mixer.quit()
+                return 'g'
+
+        elif action == 's' or action == 'n' or action == 'b' or action == 'q':
             loop = 0
             mixer.music.stop()
             mixer.quit()
@@ -290,6 +301,13 @@ def playSong(back):
     mixer.music.stop()
     mixer.quit()
     return 'n'
+
+def tracklistFunction():
+    global playlistIndex, playlistLength
+    lineNb = 0
+    tracklist = getTracklist("tracklist.txt")
+    printTracklist(lineNb, tracklist, playlistIndex)
+    return tracklistActions(playlistIndex, playlistLength, tracklist)
 
 def removeFolderContent(path):
     filelist = glob.glob(os.path.join(f"{dirName}/{path}/", "*"))
@@ -431,6 +449,7 @@ if __name__ == '__main__':
             else:
                 addLog("Script: 's' interrupt")
                 os.system('cls' if os.name == 'nt' else 'clear')
+                print("kthxbye")
                 break
     else:
         print("Error: playlist to short :(")
