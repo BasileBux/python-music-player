@@ -31,18 +31,19 @@ Kenya Grace - Meteor [4/50|2:21]
 | `p`                       | Play / Pause                |
 | `b`                       | Previous song               |
 | `n`                       | Next song                   |
-| `s` or `q`                | Close program               |
-| `x` x being a number      | Loop song x number of times |
-| `goto x` x being a number | Go to song x in the list    |
+| `s` `q`                   | Close program               |
+| `x` (number)              | Loop song x times           |
+| `goto x` (number)         | Go to song x in the list    |
 | `l`                       | Open tracklist menu         |
+
 <br>
 
 #### Inside tracklist menu: 
 | Command              | Function             |
 |----------------------|----------------------|
 | `directional arrows` | Move up / down       |
-| `space` or `enter`   | Play selected song   |
-| `q`                  | Go back to main menu |
+| `space` `enter`      | Play selected song   |
+| `q` `backspace`      | Go back to main menu |
 
 Note: green song = song playing
 

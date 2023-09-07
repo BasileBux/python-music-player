@@ -305,8 +305,8 @@ def playSong(back):
 def tracklistFunction():
     global playlistIndex, playlistLength
     lineNb = 0
-    tracklist = getTracklist("tracklist.txt")
-    printTracklist(lineNb, tracklist, playlistIndex)
+    tracklist = getTracklist(f"{dirName}/tracklist.txt")
+    printTracklist(lineNb, tracklist, playlistIndex,  0, (os.get_terminal_size()[1]) - 2, playlistLength)
     return tracklistActions(playlistIndex, playlistLength, tracklist)
 
 def removeFolderContent(path):
