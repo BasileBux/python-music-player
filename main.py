@@ -105,7 +105,7 @@ def changeIndex(playlistIndex, back):
 
 # checks if all the next songs are downloaded and if not, downloads them
 def checkNextSong():
-    if playlistIndex + 4 <= playlistLength: 
+    if playlistIndex + 4 < playlistLength: 
         for i in range(5):
             path = f"{dirName}/music/{getTitle(playlistIndex + (i + 1))}.mp3"
             if not exists(path):
